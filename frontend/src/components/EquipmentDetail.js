@@ -42,8 +42,9 @@ export default function EquipmentDetail({ item, onClose, token, user }) {
   // Color based on condition
   const getConditionColor = (condition) => {
     const c = condition?.toLowerCase();
-    if (c.includes("good")) return "#16a34a"; // green
+    if (c.includes("excellent")) return "#16a34a"; // green
     if (c.includes("bad")) return "#dc2626"; // red
+    if (c.includes("good")) return "#dca926ff"; // red
     if (c.includes("fair")) return "#ca8a04"; // yellow
     return "#475569"; // default
   };
@@ -136,7 +137,7 @@ export default function EquipmentDetail({ item, onClose, token, user }) {
           <Typography sx={{ fontWeight: 600, color: "#334155" }}>
             Condition
           </Typography>
-          <Typography sx={{ color: getConditionColor(item.condition) }}>
+          <Typography sx={{ fontWeight: 600, color: getConditionColor(item.condition) }}>
             {item.condition}
           </Typography>
         </Box>
