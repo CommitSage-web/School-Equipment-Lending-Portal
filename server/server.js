@@ -16,34 +16,23 @@ app.use(bodyParser.json());
 // LOGIN with bcrypt password comparison
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password)
-    return res.status(400).json({ error: 'Username and password required' });
-
+  if(!username || !password) return res.status(400).json({ error: 'Username and password required' });
   try {
     const user = await db.getUserByUsername(username);
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
-
+    if(!user) return res.status(401).json({ error: 'Invalid credentials' });
+    // compare bcrypt hash
     const bcrypt = require('bcryptjs');
     const match = bcrypt.compareSync(password, user.password);
-    if (!match) return res.status(401).json({ error: 'Invalid credentials' });
+    if(!match) return res.status(401).json({ error: 'Invalid credentials' });
 
     const jwt = require('jsonwebtoken');
-    const token = jwt.sign(
-        { id: user.id, username: user.username, role: user.role, name: user.name },
-        SECRET,
-        { expiresIn: '8h' }
-    );
-
-    return res.json({
-      token,
-      user: { id: user.id, username: user.username, role: user.role, name: user.name },
-    });
+    const token = jwt.sign({ id: user.id, username: user.username, role: user.role, name: user.name }, SECRET, { expiresIn: '8h' });
+    return res.json({ token, user: { id: user.id, username: user.username, role: user.role, name: user.name }});
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Server error' });
   }
 });
-
 
 // auth middleware: verifies token and attaches payload to req.user
 function auth(requiredRole){ // requiredRole optional: 'admin' or 'staff' etc
@@ -69,6 +58,60 @@ function auth(requiredRole){ // requiredRole optional: 'admin' or 'staff' etc
 }
 
 // Public equipment list
+// SIGNUP endpoint — logs email to console instead of sending real mail
+app.post('/api/auth/signup', async (req, res) => {
+  const { name, username, password, role, roll_no } = req.body;
+  if (!username || !password || !role)
+    return res.status(400).json({ error: 'username, password and role required' });
+
+  try {
+    // Check if user exists
+    const existing = await db.getUserByUsername(username);
+    if (existing) return res.status(409).json({ error: 'User already exists' });
+
+    // Hash password
+    const bcrypt = require('bcryptjs');
+    const hashed = bcrypt.hashSync(password, 10);
+
+    // Insert user
+    const created = await db.createUser({
+      username,
+      password: hashed,
+      name,
+      role,
+      roll_no,
+    });
+
+    // Log the “email” in console (for demo)
+    console.log(`
+      --------------------------
+      📧 Simulated Signup Email
+      To: ${username}
+      Subject: Your School Portal Account
+      Message:
+      Hello ${name || username},
+      
+      Your account for the School Equipment Portal has been created.
+      
+      Username: ${username}
+      Password: ${password}
+      Role: ${role}
+      
+      (Email sending is disabled in demo mode.)
+      --------------------------
+      `);
+
+    res.json({
+      success: true,
+      user: { id: created.id, username, role, name },
+      message: 'Account created. Check server console for email log.',
+    });
+  } catch (err) {
+    console.error('Signup error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 app.get('/api/equipment', async (req, res) => {
   const items = await db.getAllEquipment();
   res.json(items);

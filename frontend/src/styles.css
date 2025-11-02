@@ -1,1 +1,14 @@
-body{font-family:Roboto,Arial,sans-serif;background:#f4f6f8;margin:0;padding:0;}
+body{
+    font-family:Roboto,Arial,sans-serif;
+    background:#f5f6fa;
+    margin:0;
+    padding:0;
+}
+/*.MuiCard-root {*/
+/*    border-radius: 16px !important;*/
+/*    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;*/
+/*    transition: transform 0.2s ease;*/
+/*}*/
+/*.MuiCard-root:hover {*/
+/*    transform: translateY(-4px);*/
+/*}*/

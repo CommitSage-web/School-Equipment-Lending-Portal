@@ -34,24 +34,32 @@ module.exports = {
     },
 
     // equipment
+    // --- equipment ---
     getAllEquipment: async () => all('SELECT * FROM equipment'),
     getEquipmentById: async (id) => get('SELECT * FROM equipment WHERE id = ?', [id]),
     createEquipment: async (e) => {
-        const r = await run('INSERT INTO equipment (name, category, condition, quantity, available, description) VALUES (?, ?, ?, ?, ?, ?)',
-            [e.name, e.category, e.condition || 'Good', e.quantity || 1, e.quantity || 1, e.description || '']);
+        const r = await run(
+            'INSERT INTO equipment (name, category, condition, quantity, available, description, image) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [e.name, e.category, e.condition || 'Good', e.quantity || 1, e.quantity || 1, e.description || '', e.image || null]
+        );
         return { id: r.lastID, ...e };
     },
     updateEquipment: async (id, data) => {
         const item = await get('SELECT * FROM equipment WHERE id = ?', [id]);
-        if(!item) throw new Error('Not found');
-        const name = data.name || item.name;
-        const category = data.category || item.category;
-        const condition = data.condition || item.condition;
-        const quantity = data.quantity !== undefined ? data.quantity : item.quantity;
-        const available = data.available !== undefined ? data.available : item.available;
-        const description = data.description || item.description;
-        await run('UPDATE equipment SET name=?, category=?, condition=?, quantity=?, available=?, description=? WHERE id=?',
-            [name, category, condition, quantity, available, description, id]);
+        if (!item) throw new Error('Not found');
+        const updated = {
+            name: data.name || item.name,
+            category: data.category || item.category,
+            condition: data.condition || item.condition,
+            quantity: data.quantity !== undefined ? data.quantity : item.quantity,
+            available: data.available !== undefined ? data.available : item.available,
+            description: data.description || item.description,
+            image: data.image || item.image
+        };
+        await run(
+            'UPDATE equipment SET name=?, category=?, condition=?, quantity=?, available=?, description=?, image=? WHERE id=?',
+            [updated.name, updated.category, updated.condition, updated.quantity, updated.available, updated.description, updated.image, id]
+        );
         return await get('SELECT * FROM equipment WHERE id = ?', [id]);
     },
     deleteEquipment: async (id) => run('DELETE FROM equipment WHERE id = ?', [id]),

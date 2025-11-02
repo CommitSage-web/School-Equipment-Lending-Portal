@@ -100,73 +100,19 @@ export default function EquipmentList({ token, user }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05, duration: 0.4 }}
             >
-              <Card
-                elevation={3}
-                sx={{
-                  borderRadius: 3,
-                  backgroundColor: "#f8fafc",
-                  transition: "transform 0.25s ease, box-shadow 0.3s ease",
-                  "&:hover": {
-                    transform: "translateY(-6px)",
-                    boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
-                  },
-                }}
-              >
-                <CardContent>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 700,
-                      color: "#1e40af",
-                      mb: 1,
-                      textTransform: "capitalize",
-                    }}
-                  >
-                    {item.name}
-                  </Typography>
-
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#475569", fontWeight: 500, mb: 0.5 }}
-                  >
-                    Category:{" "}
-                    <Box component="span" sx={{ color: "#2563eb" }}>
-                      {item.category}
+              <Card sx={{ height: '100%' }}>
+                {item.image && (
+                    <Box sx={{ height: 160, overflow: 'hidden' }}>
+                      <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </Box>
-                  </Typography>
-
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: item.available > 0 ? "#059669" : "#dc2626",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Available: {item.available} / {item.quantity}
-                  </Typography>
+                )}
+                <CardContent>
+                  <Typography variant="h6">{item.name}</Typography>
+                  <Typography variant="body2">Category: {item.category}</Typography>
+                  <Typography variant="body2">Available: {item.available} / {item.quantity}</Typography>
                 </CardContent>
-
-                <CardActions sx={{ px: 2, pb: 2 }}>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={() => setSelected(item)}
-                    sx={{
-                      textTransform: "none",
-                      borderRadius: 2,
-                      fontWeight: 600,
-                      fontSize: "0.9rem",
-                      px: 2.5,
-                      background:
-                        "linear-gradient(90deg, #3b82f6 0%, #1e40af 100%)",
-                      "&:hover": {
-                        background:
-                          "linear-gradient(90deg, #2563eb 0%, #1e3a8a 100%)",
-                      },
-                    }}
-                  >
-                    View Details
-                  </Button>
+                <CardActions>
+                  <Button size="small" onClick={() => setSelected(item)}>Details</Button>
                 </CardActions>
               </Card>
             </motion.div>

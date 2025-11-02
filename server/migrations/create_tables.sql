@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS equipment (
      quantity INTEGER DEFAULT 1,
      available INTEGER DEFAULT 1,
      description TEXT,
+     image TEXT,
      created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
