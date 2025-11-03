@@ -18,7 +18,7 @@ export default function Signup({ onClose }) {
         try {
             const res = await apiPost('/auth/signup', { name, username, password, role });
             const data = await res.json();
-            if(!res.ok) return setErr(data.error || 'Signup failed');
+            if (!res.ok) return setErr(data.error || 'Signup failed');
             setSuccess('Account created and email sent (if email configured).');
             setTimeout(() => {
                 onClose && onClose();
@@ -30,6 +30,11 @@ export default function Signup({ onClose }) {
 
     return (
         <Box sx={{ maxWidth: 520, mx: 'auto', mt: 4 }}>
+            <Typography variant="h4" align="center" gutterBottom>School Equipment Portal</Typography>
+            <Typography align="center" color="text.secondary" sx={{ mb: 3 }}>
+                Manage and track equipment lending efficiently
+            </Typography>
+
             <Paper elevation={4} sx={{ p: 4, borderRadius: 2 }}>
                 <Typography variant="h6">Sign Up</Typography>
                 <Typography color="text.secondary" variant="body2" sx={{ mb: 2 }}>Create an account to get started</Typography>

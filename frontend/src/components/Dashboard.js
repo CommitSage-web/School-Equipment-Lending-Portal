@@ -41,7 +41,7 @@ import {
   Tab,
   Box,
   Typography,
-  Paper,
+  Grid,
   useMediaQuery,
 } from "@mui/material";
 import {
@@ -58,7 +58,7 @@ import Contributors from "./Contributors";
 
 export default function Dashboard({ user, token }) {
   const [tab, setTab] = React.useState(0);
-  const isMobile = useMediaQuery("(max-width:600px)");
+  const isMobile = useMediaQuery("(max-width:900px)");
 
   React.useEffect(() => {
     if (user.role === "student") setTab(0);
@@ -70,136 +70,134 @@ export default function Dashboard({ user, token }) {
   return (
     <Box
       sx={{
-        mt: 5,
         display: "flex",
-        justifyContent: "center",
-        alignItems: "flex-start",
-        px: 2,
+        minHeight: "calc(100vh - 64px)",
+        background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)",
       }}
     >
-      <Paper
-        elevation={3}
+      {/* Left Panel - Navigation */}
+      <Box
         sx={{
-          width: "100%",
-          maxWidth: 1100,
-          borderRadius: 5,
-          p: { xs: 2, sm: 4 },
-          background:
-            "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(240,245,255,0.9))",
-          backdropFilter: "blur(10px)",
-          boxShadow:
-            "0 4px 30px rgba(0,0,0,0.05), 0 1px 4px rgba(0,0,0,0.08)",
+          width: isMobile ? "90px" : "270px", // ⬅️ Increased width
+          background: "#fff",
+          borderRight: "1px solid #e5e7eb",
+          p: isMobile ? 1 : 2,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: isMobile ? "center" : "flex-start",
+          pt: 4,
+          boxShadow: "2px 0 10px rgba(0,0,0,0.05)",
         }}
       >
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+        <Typography
+          variant={isMobile ? "body1" : "h6"}
+          sx={{
+            mb: 4,
+            fontWeight: 700,
+            color: "#111827",
+            textAlign: isMobile ? "center" : "left",
+            letterSpacing: 0.2,
+          }}
         >
-          <Typography
-            variant="h5"
-            align="center"
-            sx={{
-              mb: 1,
-              fontWeight: 700,
-              color: "#1e293b",
-              letterSpacing: "0.4px",
-            }}
-          >
-            Welcome, {user.name}
-          </Typography>
+          {isMobile ? "EQP" : "Equipment Portal"}
+        </Typography>
 
-          <Typography
-            variant="subtitle2"
-            align="center"
-            sx={{
-              mb: 3,
-              color: "blue",
+        <Tabs
+          orientation="vertical"
+          value={tab}
+          onChange={handleTabChange}
+          sx={{
+            "& .MuiTab-root": {
+              textTransform: "none",
               fontWeight: 600,
-              textTransform: "capitalize",
-              fontSize: "1rem",
-            }}
-          >
-            Role: {user.role}
-          </Typography>
+              justifyContent: isMobile ? "center" : "flex-start",
+              alignItems: "center",
+              borderRadius: "10px",
+              color: "#374151",
+              minHeight: 50,
+              mb: 1,
+              px: isMobile ? 0 : 2,
+              width: isMobile ? "170px" : "240px", // 🔹 widen the tab background fill area
+              transition: "0.2s",
+              "&:hover": {
+                backgroundColor: "#f3f4f6",
+              },
+            },
+            "& .Mui-selected": {
+              color: "#fff !important",
+              backgroundColor: "#000",
+              fontWeight: 700,
+              width: isMobile ? "75px" : "96%", // 🔹 make selected tab box slightly wider
+              "&:hover": {
+                backgroundColor: "#000",
+              },
+            },
+            "& .MuiTabs-indicator": {
+              display: "none",
+            },
+          }}
+        >
+          <Tab
+            icon={<EquipmentIcon />}
+            iconPosition="start"
+            label={isMobile ? "" : "Equipment"}
+          />
+          <Tab
+            icon={<RequestIcon />}
+            iconPosition="start"
+            label={isMobile ? "" : "Requests"}
+          />
+          {(user.role === "admin" || user.role === "staff") && (
+            <Tab
+              icon={<ManageIcon />}
+              iconPosition="start"
+              label={isMobile ? "" : "Manage"}
+            />
+          )}
+          <Tab
+            icon={<ContributorsIcon />}
+            iconPosition="start"
+            label={isMobile ? "" : "Contributors"}
+          />
+        </Tabs>
+      </Box>
 
-          {/* Tabs */}
-          <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
-            <Tabs
-              value={tab}
-              onChange={handleTabChange}
-              variant={isMobile ? "scrollable" : "standard"}
-              scrollButtons="auto"
-              TabIndicatorProps={{
-                style: {
-                  background:
-                    "linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%)",
-                  height: "3px",
-                  borderRadius: "3px",
-                },
-              }}
-              sx={{
-                "& .MuiTab-root": {
-                  textTransform: "none",
-                  fontWeight: 600,
-                  color: "black",
-                  fontSize: "1rem",
-                  transition: "0.2s ease",
-                  minWidth: isMobile ? "auto" : 140,
-                },
-                "& .MuiTab-root.Mui-selected": {
-                  color: "#2563eb",
-                },
-                "& .MuiSvgIcon-root": {
-                  color: "#2563eb",
-                },
-              }}
-            >
-              <Tab
-                icon={<EquipmentIcon sx={{ color: "#2563eb" }} />}
-                iconPosition="start"
-                label="Equipment"
-              />
-              <Tab
-                icon={<RequestIcon sx={{ color: "#2563eb" }} />}
-                iconPosition="start"
-                label="Requests"
-              />
-              {(user.role === "admin" || user.role === "staff") && (
-                <Tab
-                  icon={<ManageIcon sx={{ color: "#2563eb" }} />}
-                  iconPosition="start"
-                  label="Manage"
-                />
-              )}
-              <Tab
-                icon={<ContributorsIcon sx={{ color: "#2563eb" }} />}
-                iconPosition="start"
-                label="Contributors"
-              />
-            </Tabs>
-          </Box>
+      {/* Right Panel - Content */}
+      <Box
+        component={motion.div}
+        key={tab}
+        initial={{ opacity: 0, x: 10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3 }}
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          mt: 2,
+          overflowY: "auto",
+        }}
+      >
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
+            mb: 2,
+            color: "black",
+            ml: 2.9, // 👈 adds left margin (you can adjust value as needed)
+          }}
+        >
+          Welcome, {user.name}
+        </Typography>
 
-          {/* Tab Content */}
-          <motion.div
-            key={tab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Box sx={{ mt: 2 }}>
-              {tab === 0 && <EquipmentList token={token} user={user} />}
-              {tab === 1 && <RequestsPanel token={token} user={user} />}
-              {tab === 2 &&
-                (user.role === "admin" || user.role === "staff") && (
-                  <AdminPanel token={token} user={user} />
-                )}
-              {tab === 3 && <Contributors token={token} user={user} />}
-            </Box>
-          </motion.div>
-        </motion.div>
-      </Paper>
+        <Box>
+          {tab === 0 && <EquipmentList token={token} user={user} />}
+          {tab === 1 && <RequestsPanel token={token} user={user} />}
+          {tab === 2 &&
+            (user.role === "admin" || user.role === "staff") && (
+              <AdminPanel token={token} user={user} />
+            )}
+          {tab === 3 && <Contributors token={token} user={user} />}
+        </Box>
+      </Box>
     </Box>
   );
 }
-

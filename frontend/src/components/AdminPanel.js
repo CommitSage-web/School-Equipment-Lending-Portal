@@ -71,25 +71,28 @@
 //         </>
 //     );
 // }
-// frontend/src/components/AdminPanel.js
 import React, { useEffect, useState } from "react";
 import {
-  Grid,
-  Card,
-  CardContent,
+  Chip,
+  Box,
   Typography,
   Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  TextField,
   Dialog,
   DialogTitle,
   DialogContent,
-  TextField,
   DialogActions,
-  Box,
-  Divider,
+  MenuItem
 } from "@mui/material";
 import { apiGet, apiPost, apiPut } from "../api";
-import { motion } from "framer-motion";
-import { PlusCircle, Edit2, Trash2 } from "lucide-react";
+import { Plus, Edit2, Trash2 } from "lucide-react";
 
 export default function AdminPanel({ token }) {
   const [items, setItems] = useState([]);
@@ -106,7 +109,7 @@ export default function AdminPanel({ token }) {
   async function load() {
     const res = await apiGet("/equipment");
     const data = await res.json();
-    setItems(data);
+    setItems(Array.isArray(data) ? data : []);
   }
 
   useEffect(() => {
@@ -138,11 +141,8 @@ export default function AdminPanel({ token }) {
   }
 
   async function save() {
-    if (edit) {
-      await apiPut(`/equipment/${edit.id}`, form, token);
-    } else {
-      await apiPost("/equipment", form, token);
-    }
+    if (edit) await apiPut(`/equipment/${edit.id}`, form, token);
+    else await apiPost("/equipment", form, token);
     setOpen(false);
     load();
   }
@@ -157,15 +157,8 @@ export default function AdminPanel({ token }) {
   }
 
   return (
-    <Box
-      sx={{
-        p: 2,
-        backdropFilter: "blur(10px)",
-        background: "linear-gradient(145deg, #f0f9ff, #ffffff)",
-        borderRadius: 3,
-        boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-      }}
-    >
+    <Box sx={{ p: 3 }}>
+      {/* Header Section */}
       <Box
         sx={{
           display: "flex",
@@ -174,127 +167,158 @@ export default function AdminPanel({ token }) {
           mb: 2,
         }}
       >
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            color: "#1e3a8a",
-            letterSpacing: 0.5,
-          }}
-        >
-          Equipment Management
-        </Typography>
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: "#000" }}>
+            Equipment Management
+          </Typography>
+          <Typography sx={{ color: "#6b7280" }}>
+            Manage your school&apos;s equipment inventory
+          </Typography>
+        </Box>
+
         <Button
           variant="contained"
-          startIcon={<PlusCircle size={18} />}
+          startIcon={<Plus size={18} />}
           onClick={openCreate}
           sx={{
-            borderRadius: 2,
             textTransform: "none",
             fontWeight: 600,
-            background: "linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%)",
-            boxShadow: "0 4px 12px rgba(37,99,235,0.25)",
-            "&:hover": {
-              background:
-                "linear-gradient(90deg, #1d4ed8 0%, #1e40af 100%)",
-            },
+            borderRadius: "8px",
+            backgroundColor: "#000",
+            color: "#fff",
+            px: 2.5,
+            py: 1,
+            "&:hover": { backgroundColor: "#111" },
           }}
         >
           Add Equipment
         </Button>
       </Box>
 
-      <Grid container spacing={2}>
-        {items.map((item, index) => (
-          <Grid item xs={12} md={6} key={item.id}>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05, duration: 0.3 }}
-            >
-              <Card
-                sx={{
-                  borderRadius: 3,
-                  background:
-                    "linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,249,255,0.95))",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                  "&:hover": {
-                    transform: "translateY(-4px)",
-                    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
-                  },
-                }}
-              >
-                <CardContent>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 600,
-                      color: "#1e40af",
-                    }}
-                  >
-                    {item.name}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: "0.9rem",
-                      color: "#475569",
-                      mt: 0.5,
-                    }}
-                  >
-                    Category: {item.category}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: "0.9rem",
-                      color: "#475569",
-                    }}
-                  >
-                    Condition: {item.condition}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: "0.9rem",
-                      mt: 1,
-                      color: "#1e3a8a",
-                      fontWeight: 500,
-                    }}
-                  >
-                    Available: {item.available} / {item.quantity}
-                  </Typography>
+      {/* Equipment Inventory Section */}
+      <Box
+        sx={{
+          backgroundColor: "#fff",
+          borderRadius: "12px",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          p: 3,
+          mt: 2,
+        }}
+      >
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+          Equipment Inventory
+        </Typography>
+        <Typography sx={{ color: "#6b7280", mb: 2 }}>
+          View and manage all equipment
+        </Typography>
 
-                  <Box sx={{ display: "flex", gap: 1.5, mt: 2 }}>
-                    <Button
-                      size="small"
-                      startIcon={<Edit2 size={16} />}
-                      onClick={() => openEdit(item)}
+        {/* Search Bar */}
+        <TextField
+          fullWidth
+          placeholder="Search equipment..."
+          variant="outlined"
+          size="small"
+          sx={{
+            mb: 2,
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "8px",
+              backgroundColor: "#f9fafb",
+            },
+          }}
+        />
+
+        {/* Table */}
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: "12px",
+            boxShadow: "none",
+            border: "1px solid #e5e7eb",
+          }}
+        >
+          <Table>
+            <TableHead>
+              <TableRow>
+                {["Name", "Category", "Condition", "Quantity", "Available", "Actions"].map(
+                  (head) => (
+                    <TableCell
+                      key={head}
                       sx={{
-                        textTransform: "none",
                         fontWeight: 600,
-                        color: "#2563eb",
+                        color: "#111827",
+                        fontSize: "0.9rem",
+                        backgroundColor: "#f9fafb",
                       }}
                     >
-                      Edit
-                    </Button>
-                    <Button
-                      size="small"
-                      startIcon={<Trash2 size={16} />}
-                      onClick={() => remove(item.id)}
+                      {head}
+                    </TableCell>
+                  )
+                )}
+              </TableRow>
+            </TableHead>
+
+            <TableBody>
+              {items.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell>{item.name}</TableCell>
+                  <TableCell>
+                    {item.category}
+                  </TableCell>
+                  <TableCell>
+                    <Box
                       sx={{
-                        textTransform: "none",
+                        display: "inline-block",
+                        px: 1.5,
+                        py: 0.3,
+                        fontSize: "0.8rem",
+                        borderRadius: "8px",
+                        color:
+                          item.condition === "Excellent"
+                            ? "#0f766e"
+                            : item.condition === "Good"
+                              ? "#2563eb"
+                              : "#b91c1c",
+                        backgroundColor:
+                          item.condition === "Excellent"
+                            ? "#ccfbf1"
+                            : item.condition === "Good"
+                              ? "#dbeafe"
+                              : "#fee2e2",
                         fontWeight: 600,
-                        color: "#dc2626",
                       }}
                     >
-                      Delete
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </Grid>
-        ))}
-      </Grid>
+                      {item.condition}
+                    </Box>
+                  </TableCell>
+                  <TableCell>{item.quantity}</TableCell>
+                  <TableCell>{item.available}</TableCell>
+                  <TableCell>
+                    <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                      <Edit2
+                        size={18}
+                        style={{
+                          cursor: "pointer",
+                          color: "#111",
+                        }}
+                        onClick={() => openEdit(item)}
+                      />
+                      <Trash2
+                        size={18}
+                        style={{
+                          cursor: "pointer",
+                          color: "#dc2626",
+                        }}
+                        onClick={() => remove(item.id)}
+                      />
+                    </Box>
+                  </TableCell>
+
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
 
       {/* Dialog */}
       <Dialog
@@ -304,96 +328,165 @@ export default function AdminPanel({ token }) {
         maxWidth="sm"
         PaperProps={{
           sx: {
-            borderRadius: 3,
+            borderRadius: 2,
             p: 1,
-            backdropFilter: "blur(6px)",
-            background:
-              "linear-gradient(145deg, rgba(255,255,255,0.95), rgba(240,249,255,0.9))",
+            backgroundColor: "#fff",
           },
         }}
       >
+        {/* Header */}
         <DialogTitle
           sx={{
             fontWeight: 700,
-            color: "#1e3a8a",
-            textAlign: "center",
+            fontSize: "1.1rem",
+            color: "#000",
+            pb: 0,
           }}
         >
           {edit ? "Edit Equipment" : "Add New Equipment"}
         </DialogTitle>
-        <Divider />
+        <Typography
+          sx={{
+            color: "#6b7280",
+            fontSize: "0.9rem",
+            mb: 2,
+            mt: 0.5,
+            ml: 3,
+          }}
+        >
+          {edit
+            ? "Update equipment details"
+            : "Add a new item to the inventory"}
+        </Typography>
+
+        {/* Content */}
         <DialogContent sx={{ mt: 1 }}>
+          {/* Equipment Name */}
           <TextField
             fullWidth
-            label="Name"
+            label="Equipment Name"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             margin="dense"
           />
+
+          {/* Category */}
           <TextField
             fullWidth
             label="Category"
+            placeholder="e.g., Sports, Lab Equipment, Photography"
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
             margin="dense"
           />
-          <TextField
-            fullWidth
-            label="Condition"
-            value={form.condition}
-            onChange={(e) => setForm({ ...form, condition: e.target.value })}
-            margin="dense"
-          />
-          <TextField
-            fullWidth
-            type="number"
-            label="Quantity"
-            value={form.quantity}
-            onChange={(e) =>
-              setForm({ ...form, quantity: Number(e.target.value) })
-            }
-            margin="dense"
-          />
+
+          {/* Description */}
           <TextField
             fullWidth
             label="Description"
             multiline
             minRows={2}
             value={form.description}
-            onChange={(e) =>
-              setForm({ ...form, description: e.target.value })
-            }
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            margin="dense"
+          />
+
+          {/* Condition */}
+          <TextField
+            fullWidth
+            select
+            label="Condition"
+            value={form.condition}
+            onChange={(e) => setForm({ ...form, condition: e.target.value })}
+            margin="dense"
+            SelectProps={{ displayEmpty: true }}
+          >
+            <MenuItem value="Excellent">Excellent</MenuItem>
+            <MenuItem value="Good">Good</MenuItem>
+            <MenuItem value="Fair">Fair</MenuItem>
+            <MenuItem value="Poor">Poor</MenuItem>
+          </TextField>
+
+
+          {/* Conditional Fields */}
+          {edit ? (
+            <>
+              <TextField
+                fullWidth
+                label="Total Quantity"
+                type="number"
+                value={form.quantity}
+                onChange={(e) =>
+                  setForm({ ...form, quantity: e.target.value })
+                }
+                margin="dense"
+              />
+              <TextField
+                fullWidth
+                label="Available"
+                type="number"
+                value={form.available}
+                onChange={(e) =>
+                  setForm({ ...form, available: e.target.value })
+                }
+                margin="dense"
+              />
+            </>
+          ) : (
+            <TextField
+              fullWidth
+              label="Quantity"
+              type="number"
+              value={form.quantity}
+              onChange={(e) =>
+                setForm({ ...form, quantity: e.target.value })
+              }
+              margin="dense"
+            />
+          )}
+
+          {/* Image URL */}
+          <TextField
+            fullWidth
+            label="Image URL (Optional)"
+            placeholder="https://..."
+            value={form.image}
+            onChange={(e) => setForm({ ...form, image: e.target.value })}
             margin="dense"
           />
         </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
+
+        {/* Buttons */}
+        <DialogActions sx={{ p: 2, pt: 1 }}>
+          <Button
+            onClick={save}
+            variant="contained"
+            sx={{
+              flexGrow: 1,
+              backgroundColor: "#000",
+              color: "#fff",
+              textTransform: "none",
+              fontWeight: 600,
+              borderRadius: 1,
+              "&:hover": { backgroundColor: "#111" },
+            }}
+          >
+            {edit ? "Save Changes" : "Add Equipment"}
+          </Button>
           <Button
             onClick={() => setOpen(false)}
             sx={{
               textTransform: "none",
               fontWeight: 600,
-              color: "#475569",
+              color: "#000",
+              borderRadius: 1,
             }}
           >
             Cancel
-          </Button>
-          <Button
-            onClick={save}
-            variant="contained"
-            sx={{
-              textTransform: "none",
-              fontWeight: 600,
-              borderRadius: 2,
-              background: "linear-gradient(90deg, #2563eb, #1d4ed8)",
-              "&:hover": {
-                background: "linear-gradient(90deg, #1d4ed8, #1e40af)",
-              },
-            }}
-          >
-            Save
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
 }
+

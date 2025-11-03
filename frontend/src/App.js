@@ -51,10 +51,7 @@ export default function App() {
                 position="static"
                 elevation={3}
                 sx={{
-                    background:
-                        "linear-gradient(90deg, rgba(118,174,241,1) 0%, rgba(128,208,199,1) 100%)",
-                    backdropFilter: "blur(10px)",
-                    color: "#000",
+                    background:"black"
                 }}
             >
                 <Toolbar>
@@ -67,17 +64,17 @@ export default function App() {
                             gap: 1,
                         }}
                     >
-                        <InventoryIcon sx={{ fontSize: 28, color: "#0f172a" }} />
+                        <InventoryIcon sx={{ fontSize: 28, color: "white" }} />
                         <Typography
                             variant="h6"
                             sx={{
                                 fontFamily: "'Poppins', sans-serif",
                                 fontWeight: 600,
                                 letterSpacing: "0.5px",
-                                color: "#0f172a",
+                                color: "white",
                             }}
                         >
-                            Equipment Lending Portal
+                            School Equipment Portal
                         </Typography>
                     </Box>
 
@@ -89,7 +86,7 @@ export default function App() {
                                 alignItems: "center",
                                 mr: 2,
                                 gap: 0.5,
-                                color: "#0f172a",
+                                color: "white",
                             }}
                         >
                             <PersonIcon sx={{ fontSize: 22 }} />
@@ -115,7 +112,7 @@ export default function App() {
                                 fontWeight: 600,
                                 borderRadius: "10px",
                                 px: 2.5,
-                                color: "#0f172a",
+                                color: "white",
                                 fontFamily: "'Poppins', sans-serif",
                                 "&:hover": {
                                     backgroundColor: "rgba(255,255,255,0.3)",
@@ -129,7 +126,6 @@ export default function App() {
             </AppBar>
 
             {/* Main Content */}
-            <Container sx={{ mt: 4 }}>
                 {!user ? (
                     showSignup ? (
                         <Signup onClose={() => setShowSignup(false)} />
@@ -142,7 +138,6 @@ export default function App() {
                 ) : (
                     <Dashboard user={user} token={token} />
                 )}
-            </Container>
         </>
     );
 }

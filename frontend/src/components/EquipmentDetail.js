@@ -26,166 +26,218 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  Button,
   Typography,
   Box,
-  Divider,
   IconButton,
+  Paper,
+  Button,
+  TextField,
 } from "@mui/material";
 import { motion } from "framer-motion";
-import { XCircle } from "lucide-react";
-import BorrowRequest from "./BorrowRequest";
+import { X } from "lucide-react";
 
 export default function EquipmentDetail({ item, onClose, token, user }) {
+  const [quantity, setQuantity] = React.useState(1);
+  const [start, setStart] = React.useState("");
+  const [end, setEnd] = React.useState("");
+  const [notes, setNotes] = React.useState("");
+
   if (!item) return null;
 
-  // Color based on condition
-  const getConditionColor = (condition) => {
-    const c = condition?.toLowerCase();
-    if (c.includes("excellent")) return "#16a34a"; // green
-    if (c.includes("bad")) return "#dc2626"; // red
-    if (c.includes("good")) return "#dca926ff"; // red
-    if (c.includes("fair")) return "#ca8a04"; // yellow
-    return "#475569"; // default
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    alert("Request submitted successfully!");
+    onClose();
   };
 
   return (
     <Dialog
-      open={true}
+      open
       onClose={onClose}
       fullWidth
       maxWidth="sm"
       PaperProps={{
         component: motion.div,
-        initial: { opacity: 0, y: 40 },
-        animate: { opacity: 1, y: 0 },
-        transition: { duration: 0.35 },
+        initial: { opacity: 0, scale: 0.95, y: 30 },
+        animate: { opacity: 1, scale: 1, y: 0 },
+        transition: { duration: 0.3 },
         sx: {
-          backdropFilter: "blur(12px)",
-          background:
-            "linear-gradient(145deg, rgba(255,255,255,0.95), rgba(235,240,255,0.9))",
-          borderRadius: "16px",
-          boxShadow: "0 12px 36px rgba(0,0,0,0.15)",
+          borderRadius: "12px",
           overflow: "hidden",
-          p: 0,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+          backgroundColor: "#fff",
         },
       }}
     >
-      {/* Header */}
+      {/* HEADER */}
       <DialogTitle
         sx={{
+          px: 3,
+          py: 2.5,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          background:
-            "linear-gradient(90deg, rgba(59,130,246,0.2), rgba(96,165,250,0.3))",
-          fontWeight: 700,
-          color: "#1e3a8a",
-          py: 2,
-          px: 3,
-          letterSpacing: 0.3,
-          borderTopLeftRadius: "16px",
-          borderTopRightRadius: "16px",
-          boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.05)",
+          backgroundColor: "#fff",
+          borderBottom: "1px solid #e2e8f0",
         }}
       >
-        {item.name}
-        <IconButton
-          onClick={onClose}
-          sx={{
-            color: "#ef4444",
-            "&:hover": {
-              color: "#dc2626",
-              transform: "scale(1.1)",
-            },
-            transition: "0.2s",
-          }}
-        >
-          <XCircle size={24} />
-        </IconButton>
+        <Box>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              color: "#0f172a",
+              mb: 0.3,
+              fontSize: "1.05rem",
+            }}
+          >
+            Request Equipment
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "#475569",
+              fontSize: "0.9rem",
+            }}
+          >
+            Submit a request to borrow {item.name}
+          </Typography>
+        </Box>
       </DialogTitle>
 
-      {/* Content */}
-      <DialogContent
-        sx={{
-          px: 4,
-          py: 3,
-          mt: 1,
-          borderRadius: 3,
-          background: "rgba(255,255,255,0.65)",
-          mx: 2,
-          mb: 2,
-        }}
-      >
-        {/* Category */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            mb: 1.5,
-            mt: 1.5, // 👈 Added top margin
-          }}
-        >
-          <Typography sx={{ fontWeight: 600, color: "#334155" }}>
-            Category
-          </Typography>
-          <Typography sx={{ color: "#475569" }}>{item.category}</Typography>
-        </Box>
+      {/* CONTENT */}
+      <DialogContent sx={{ p: 3, pt: 4 }}>
+        <form onSubmit={handleSubmit}>
+          {/* CURRENTLY AVAILABLE */}
+          <Paper
+            elevation={0}
+            sx={{
+              backgroundColor: "#f1f5f9",
+              borderRadius: "10px",
+              p: 2,
+              mb: 3,
+              mt: 2,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Box>
+              <Typography
+                variant="body2"
+                sx={{ color: "#334155", fontWeight: 600 }}
+              >
+                Currently Available
+              </Typography>
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 700, color: "#0f172a" }}
+              >
+                {item.available}
+              </Typography>
+            </Box>
+          </Paper>
 
-        {/* Condition */}
-        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1.5 }}>
-          <Typography sx={{ fontWeight: 600, color: "#334155" }}>
-            Condition
-          </Typography>
-          <Typography sx={{ fontWeight: 600, color: getConditionColor(item.condition) }}>
-            {item.condition}
-          </Typography>
-        </Box>
+          {/* QUANTITY */}
+          <TextField
+            label="Quantity"
+            type="number"
+            fullWidth
+            margin="dense"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            InputProps={{
+              sx: { borderRadius: "8px", backgroundColor: "#f8fafc" },
+            }}
+          />
 
-        {/* Availability */}
-        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1.5 }}>
-          <Typography sx={{ fontWeight: 600, color: "#334155" }}>
-            Availability
-          </Typography>
-          <Typography sx={{ color: "#475569" }}>
-            {item.available} / {item.quantity}
-          </Typography>
-        </Box>
-
-        {/* Description */}
-        {item.description && (
-          <>
-            <Divider sx={{ my: 2 }} />
-            <Typography
-              variant="subtitle1"
-              sx={{ fontWeight: 600, color: "#334155", mb: 0.5 }}
-            >
-              Description
-            </Typography>
-            <Typography
-              sx={{
-                color: "#475569",
-                lineHeight: 1.6,
-                fontSize: "0.95rem",
-                whiteSpace: "pre-line",
+          {/* DATES */}
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <TextField
+              label="Start Date"
+              type="text"
+              placeholder="dd-mm-yyyy"
+              fullWidth
+              margin="dense"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+              InputProps={{
+                sx: { borderRadius: "8px", backgroundColor: "#f8fafc" },
               }}
-            >
-              {item.description}
-            </Typography>
-          </>
-        )}
-
-        {/* Borrow Request */}
-        {user.role === "student" && (
-          <Box sx={{ mt: 3 }}>
-            <BorrowRequest
-              equipment={item}
-              token={token}
-              user={user}
-              onDone={onClose}
+            />
+            <TextField
+              label="End Date"
+              type="text"
+              placeholder="dd-mm-yyyy"
+              fullWidth
+              margin="dense"
+              value={end}
+              onChange={(e) => setEnd(e.target.value)}
+              InputProps={{
+                sx: { borderRadius: "8px", backgroundColor: "#f8fafc" },
+              }}
             />
           </Box>
-        )}
+
+          {/* NOTES */}
+          <TextField
+            label="Notes (Optional)"
+            placeholder="Purpose of borrowing..."
+            multiline
+            rows={2}
+            fullWidth
+            margin="dense"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            InputProps={{
+              sx: { borderRadius: "8px", backgroundColor: "#f8fafc" },
+            }}
+          />
+
+          {/* BUTTONS */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: 1.5,
+              mt: 3,
+            }}
+          >
+            <Button
+              onClick={onClose}
+              variant="outlined"
+              sx={{
+                textTransform: "none",
+                borderRadius: "8px",
+                fontWeight: 600,
+                px: 3,
+                color: "#1e293b",
+                borderColor: "#cbd5e1",
+                "&:hover": {
+                  borderColor: "#94a3b8",
+                  backgroundColor: "#f8fafc",
+                },
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                borderRadius: "8px",
+                px: 3,
+                backgroundColor: "#0f172a",
+                "&:hover": { backgroundColor: "#1e293b" },
+              }}
+            >
+              Submit Request
+            </Button>
+          </Box>
+        </form>
       </DialogContent>
     </Dialog>
   );

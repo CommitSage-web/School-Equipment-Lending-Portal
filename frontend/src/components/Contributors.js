@@ -95,13 +95,13 @@ export default function Contributors({ token, user }) {
   }
 
   return (
-    <Box sx={{ mt: 2 }}>
+    <Box sx={{ mt: 4 }}>
       <Typography
         variant="h5"
         sx={{
           mb: 3,
           fontWeight: 700,
-          color: "#1e40af",
+          color: "#111",
           textAlign: "center",
           letterSpacing: 0.5,
         }}
@@ -113,7 +113,7 @@ export default function Contributors({ token, user }) {
         <Typography
           align="center"
           sx={{
-            color: "#64748b",
+            color: "#666",
             fontWeight: 500,
             mt: 4,
             fontSize: "1rem",
@@ -131,17 +131,15 @@ export default function Contributors({ token, user }) {
                 transition={{ delay: idx * 0.05, duration: 0.3 }}
               >
                 <Card
-                  elevation={3}
+                  elevation={2}
                   sx={{
-                    backdropFilter: "blur(6px)",
-                    background:
-                      "linear-gradient(145deg, rgba(255,255,255,0.8), rgba(240,249,255,0.9))",
+                    backgroundColor: "#fff",
                     borderRadius: 3,
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.05)",
+                    border: "1px solid #e5e5e5",
                     transition: "all 0.25s ease",
                     "&:hover": {
-                      transform: "translateY(-6px)",
-                      boxShadow: "0 8px 28px rgba(0,0,0,0.1)",
+                      transform: "translateY(-4px)",
+                      boxShadow: "0 6px 20px rgba(0,0,0,0.08)",
                     },
                   }}
                 >
@@ -152,10 +150,11 @@ export default function Contributors({ token, user }) {
                       value={c.name}
                       onChange={(e) => change(idx, "name", e.target.value)}
                       margin="dense"
+                      variant="outlined"
                       sx={{
-                        "& .MuiInputLabel-root": { color: "#334155" },
+                        "& .MuiInputLabel-root": { color: "#555" },
                         "& .MuiInputBase-input": {
-                          color: "#0f172a",
+                          color: "#000",
                           fontWeight: 500,
                         },
                       }}
@@ -166,10 +165,11 @@ export default function Contributors({ token, user }) {
                       value={c.roll}
                       onChange={(e) => change(idx, "roll", e.target.value)}
                       margin="dense"
+                      variant="outlined"
                       sx={{
-                        "& .MuiInputLabel-root": { color: "#334155" },
+                        "& .MuiInputLabel-root": { color: "#555" },
                         "& .MuiInputBase-input": {
-                          color: "#0f172a",
+                          color: "#000",
                           fontWeight: 500,
                         },
                       }}
@@ -184,10 +184,11 @@ export default function Contributors({ token, user }) {
                       margin="dense"
                       multiline
                       minRows={2}
+                      variant="outlined"
                       sx={{
-                        "& .MuiInputLabel-root": { color: "#334155" },
+                        "& .MuiInputLabel-root": { color: "#555" },
                         "& .MuiInputBase-input": {
-                          color: "#0f172a",
+                          color: "#000",
                           fontWeight: 500,
                         },
                       }}
@@ -212,13 +213,12 @@ export default function Contributors({ token, user }) {
               borderRadius: 2,
               fontWeight: 600,
               fontSize: "0.95rem",
-              background:
-                "linear-gradient(90deg, #2563eb 0%, #1e40af 100%)",
+              backgroundColor: "#000",
+              color: "#fff",
               "&:hover": {
-                background:
-                  "linear-gradient(90deg, #1d4ed8 0%, #1e3a8a 100%)",
+                backgroundColor: "#111",
               },
-              boxShadow: "0 6px 16px rgba(37, 99, 235, 0.25)",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
             }}
           >
             Save Contributors
@@ -228,3 +228,4 @@ export default function Contributors({ token, user }) {
     </Box>
   );
 }
+
