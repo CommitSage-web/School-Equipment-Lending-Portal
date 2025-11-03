@@ -48,13 +48,17 @@ import {
   Inventory2 as EquipmentIcon,
   Assignment as RequestIcon,
   Settings as ManageIcon,
-  Group as ContributorsIcon,
+  People as UsersIcon,
+  AccountCircle as ProfileIcon,
+  EmojiObjects as ContributorsIcon, // or VolunteerActivism / Handshake
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import EquipmentList from "./EquipmentList";
 import RequestsPanel from "./RequestsPanel";
 import AdminPanel from "./AdminPanel";
 import Contributors from "./Contributors";
+import UsersPanel from "./UsersPanel";
+import MyProfile from "./MyProfile";
 
 export default function Dashboard({ user, token }) {
   const [tab, setTab] = React.useState(0);
@@ -154,10 +158,22 @@ export default function Dashboard({ user, token }) {
               label={isMobile ? "" : "Manage"}
             />
           )}
+          {(user.role === "admin" || user.role === "staff") && (
+            <Tab
+              icon={<UsersIcon />}
+              iconPosition="start"
+              label={isMobile ? "" : "Users"}
+            />
+          )}
           <Tab
             icon={<ContributorsIcon />}
             iconPosition="start"
             label={isMobile ? "" : "Contributors"}
+          />
+          <Tab
+            icon={<ProfileIcon />}
+            iconPosition="start"
+            label={isMobile ? "" : "My Profile"}
           />
         </Tabs>
       </Box>
@@ -195,7 +211,12 @@ export default function Dashboard({ user, token }) {
             (user.role === "admin" || user.role === "staff") && (
               <AdminPanel token={token} user={user} />
             )}
-          {tab === 3 && <Contributors token={token} user={user} />}
+          {tab === 3 &&
+            (user.role === "admin" || user.role === "staff") && (
+              <UsersPanel token={token} user={user} />
+            )}
+          {tab === 4 && <Contributors token={token} user={user} />}
+          {tab === 5 && <MyProfile token={token} user={user} />}
         </Box>
       </Box>
     </Box>
