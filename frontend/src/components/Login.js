@@ -33,13 +33,14 @@ export default function Login({ onLogin, openSignup }) {
     }
 
     return (
-        <Box sx={{ maxWidth: 520, mx: 'auto', mt: 6 }}>
-            <Typography variant="h4" align="center" gutterBottom>School Equipment Portal</Typography>
-            <Typography align="center" color="text.secondary" sx={{ mb: 3 }}>
-                Manage and track equipment lending efficiently
-            </Typography>
+        <Box sx={{ minHeight: '100vh', bgcolor: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 6 }}>
+            <Box sx={{ width: '100%', maxWidth: 520, mx: 'auto' }}>
+                <Typography variant="h4" align="center" gutterBottom>School Equipment Portal</Typography>
+                <Typography align="center" color="text.secondary" sx={{ mb: 3 }}>
+                    Manage and track equipment lending efficiently
+                </Typography>
 
-            <Paper elevation={4} sx={{ p: 4, borderRadius: 2 }}>
+                <Paper elevation={4} sx={{ p: 4, borderRadius: 2 }}>
                 <Typography variant="h6" gutterBottom>Login</Typography>
                 <Typography color="text.secondary" variant="body2" sx={{ mb: 2 }}>
                     Sign in to access the equipment lending portal
@@ -68,7 +69,8 @@ export default function Login({ onLogin, openSignup }) {
                 <Typography align="center" sx={{ mt: 3 }}>
                     Don't have an account? <Button variant="text" onClick={openSignup}>Sign up</Button>
                 </Typography>
-            </Paper>
+                </Paper>
+            </Box>
         </Box>
     );
 }
