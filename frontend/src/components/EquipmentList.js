@@ -12,8 +12,12 @@ import {
   Chip,
   TextField,
   InputAdornment,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
-import { Search } from "lucide-react";
+import { Search, Filter, ArrowUpDown } from "lucide-react";
 import { motion } from "framer-motion";
 import EquipmentDetail from "./EquipmentDetail";
 import images from "../images";
@@ -23,6 +27,8 @@ export default function EquipmentList({ token, user }) {
   const [filteredItems, setFilteredItems] = useState([]);
   const [selected, setSelected] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("name");
 
   // Load equipment data
   async function load() {
@@ -47,22 +53,49 @@ export default function EquipmentList({ token, user }) {
     load();
   }, []);
 
-  // Filter items based on search query
+  // Get unique categories from items
+  const categories = [...new Set(items.map(item => item.category).filter(Boolean))];
+
+  // Filter and sort items
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredItems(items);
-    } else {
+    let filtered = [...items];
+
+    // Apply search filter
+    if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      const filtered = items.filter(
+      filtered = filtered.filter(
         (item) =>
           item.name?.toLowerCase().includes(query) ||
           item.category?.toLowerCase().includes(query) ||
           item.description?.toLowerCase().includes(query) ||
           item.condition?.toLowerCase().includes(query)
       );
-      setFilteredItems(filtered);
     }
-  }, [searchQuery, items]);
+
+    // Apply category filter
+    if (categoryFilter !== "all") {
+      filtered = filtered.filter(item => item.category === categoryFilter);
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return (a.name || "").localeCompare(b.name || "");
+        case "category":
+          return (a.category || "").localeCompare(b.category || "");
+        case "available":
+          return (b.available || 0) - (a.available || 0);
+        case "condition":
+          const conditionOrder = { "Excellent": 1, "Good": 2, "Fair": 3, "Poor": 4 };
+          return (conditionOrder[a.condition] || 5) - (conditionOrder[b.condition] || 5);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredItems(filtered);
+  }, [searchQuery, categoryFilter, sortBy, items]);
 
   // list of bundled images from src/images (values are URLs)
   const imageList = Object.values(images || {});
@@ -86,8 +119,9 @@ export default function EquipmentList({ token, user }) {
 
   return (
     <>
-      {/* Search Bar */}
+      {/* Search and Filter Controls */}
       <Box sx={{ mb: 3 }}>
+        {/* Search Bar */}
         <TextField
           fullWidth
           placeholder="Search equipment by name, category, or description..."
@@ -109,10 +143,101 @@ export default function EquipmentList({ token, user }) {
           }}
         />
 
+        {/* Filter and Sort Controls */}
+        <Box sx={{ display: "flex", gap: 2, mt: 2, flexWrap: "wrap" }}>
+          {/* Category Filter */}
+          <FormControl
+            size="small"
+            sx={{
+              minWidth: 200,
+              flex: { xs: "1 1 100%", sm: "0 1 auto" }
+            }}
+          >
+            <InputLabel>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <Filter size={16} />
+                <span>Category</span>
+              </Box>
+            </InputLabel>
+            <Select
+              value={categoryFilter}
+              label="Category"
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              sx={{
+                borderRadius: "10px",
+                backgroundColor: "#f8fafc",
+              }}
+            >
+              <MenuItem value="all">All Categories</MenuItem>
+              {categories.map((cat) => (
+                <MenuItem key={cat} value={cat}>
+                  {cat}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* Sort By */}
+          <FormControl
+            size="small"
+            sx={{
+              minWidth: 200,
+              flex: { xs: "1 1 100%", sm: "0 1 auto" }
+            }}
+          >
+            <InputLabel>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <ArrowUpDown size={16} />
+                <span>Sort By</span>
+              </Box>
+            </InputLabel>
+            <Select
+              value={sortBy}
+              label="Sort By"
+              onChange={(e) => setSortBy(e.target.value)}
+              sx={{
+                borderRadius: "10px",
+                backgroundColor: "#f8fafc",
+              }}
+            >
+              <MenuItem value="name">Name (A-Z)</MenuItem>
+              <MenuItem value="category">Category</MenuItem>
+              <MenuItem value="available">Most Available</MenuItem>
+              <MenuItem value="condition">Best Condition</MenuItem>
+            </Select>
+          </FormControl>
+
+          {/* Clear Filters Button */}
+          {(searchQuery || categoryFilter !== "all" || sortBy !== "name") && (
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => {
+                setSearchQuery("");
+                setCategoryFilter("all");
+                setSortBy("name");
+              }}
+              sx={{
+                borderRadius: "10px",
+                textTransform: "none",
+                fontWeight: 600,
+                borderColor: "#e2e8f0",
+                color: "#475569",
+                "&:hover": {
+                  borderColor: "#cbd5e1",
+                  backgroundColor: "#f8fafc",
+                },
+              }}
+            >
+              Clear Filters
+            </Button>
+          )}
+        </Box>
+
         {/* Results count */}
         <Typography
           variant="body2"
-          sx={{ mt: 1, color: "#64748b", fontWeight: 500 }}
+          sx={{ mt: 2, color: "#64748b", fontWeight: 500 }}
         >
           {filteredItems.length === items.length
             ? `Showing all ${items.length} items`
@@ -136,7 +261,7 @@ export default function EquipmentList({ token, user }) {
             No equipment found
           </Typography>
           <Typography sx={{ color: "#94a3b8" }}>
-            Try adjusting your search terms
+            Try adjusting your search terms or filters
           </Typography>
         </Box>
       ) : (
