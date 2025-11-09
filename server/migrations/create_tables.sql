@@ -45,3 +45,23 @@ CREATE TABLE IF NOT EXISTS contributors (
     roll TEXT,
     contribution TEXT
 );
+
+CREATE TABLE IF NOT EXISTS repair_logs (
+   id INTEGER PRIMARY KEY AUTOINCREMENT,
+   equipment_id INTEGER,
+   issue TEXT,
+   diagnosis TEXT,
+   actions_taken TEXT,
+   cost REAL,
+   repaired_by TEXT,
+   created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS request_history (
+   id INTEGER PRIMARY KEY AUTOINCREMENT,
+   request_id INTEGER,
+   action TEXT,
+   by_user TEXT,
+   note TEXT,
+   timestamp TEXT DEFAULT CURRENT_TIMESTAMP
+);
