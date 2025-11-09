@@ -16,10 +16,15 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  MenuItem
+  MenuItem,
+  Avatar,
+  IconButton,
+  Divider,
+  Grid,
+  Alert,
 } from "@mui/material";
 import { apiGet, apiPost, apiPut } from "../api";
-import { Plus, Edit2, Trash2 } from "lucide-react";
+import { Plus, Edit2, Trash2, Upload, X, Image as ImageIcon } from "lucide-react";
 
 export default function AdminPanel({ token }) {
   const [items, setItems] = useState([]);
@@ -31,7 +36,11 @@ export default function AdminPanel({ token }) {
     condition: "",
     quantity: 1,
     description: "",
+    image: "",
   });
+  const [imagePreview, setImagePreview] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [errors, setErrors] = useState({});
 
   async function load() {
     const res = await apiGet("/equipment");
@@ -48,10 +57,13 @@ export default function AdminPanel({ token }) {
     setForm({
       name: "",
       category: "",
-      condition: "",
+      condition: "Good",
       quantity: 1,
       description: "",
+      image: "",
     });
+    setImagePreview(null);
+    setErrors({});
     setOpen(true);
   }
 
@@ -63,15 +75,56 @@ export default function AdminPanel({ token }) {
       condition: item.condition,
       quantity: item.quantity,
       description: item.description,
+      image: item.image || "",
     });
+    setImagePreview(item.image || null);
+    setErrors({});
     setOpen(true);
   }
 
+  // Validate form
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!form.name?.trim()) {
+      newErrors.name = "Equipment name is required";
+    }
+    if (!form.category?.trim()) {
+      newErrors.category = "Category is required";
+    }
+    if (!form.condition) {
+      newErrors.condition = "Condition is required";
+    }
+    if (!form.quantity || form.quantity < 1) {
+      newErrors.quantity = "Quantity must be at least 1";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle image URL change
+  const handleImageChange = (url) => {
+    setForm({ ...form, image: url });
+    setImagePreview(url);
+  };
+
   async function save() {
-    if (edit) await apiPut(`/equipment/${edit.id}`, form, token);
-    else await apiPost("/equipment", form, token);
-    setOpen(false);
-    load();
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      if (edit) {
+        await apiPut(`/equipment/${edit.id}`, form, token);
+      } else {
+        await apiPost("/equipment", form, token);
+      }
+      setOpen(false);
+      load();
+    } catch (err) {
+      setErrors({ submit: "Failed to save equipment. Please try again." });
+    }
   }
 
   async function remove(id) {
@@ -82,6 +135,13 @@ export default function AdminPanel({ token }) {
     });
     load();
   }
+
+  // Filter items based on search
+  const filteredItems = items.filter(
+    (item) =>
+      item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <Box sx={{ p: 3 }}>
@@ -145,6 +205,8 @@ export default function AdminPanel({ token }) {
           placeholder="Search equipment..."
           variant="outlined"
           size="small"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           sx={{
             mb: 2,
             "& .MuiOutlinedInput-root": {
@@ -166,7 +228,7 @@ export default function AdminPanel({ token }) {
           <Table>
             <TableHead>
               <TableRow>
-                {["Name", "Category", "Condition", "Quantity", "Available", "Actions"].map(
+                {["Image", "Name", "Category", "Condition", "Quantity", "Available", "Actions"].map(
                   (head) => (
                     <TableCell
                       key={head}
@@ -185,12 +247,26 @@ export default function AdminPanel({ token }) {
             </TableHead>
 
             <TableBody>
-              {items.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{item.name}</TableCell>
+              {filteredItems.map((item) => (
+                <TableRow key={item.id} sx={{ "&:hover": { backgroundColor: "#f9fafb" } }}>
                   <TableCell>
-                    {item.category}
+                    <Avatar
+                      src={item.image}
+                      variant="rounded"
+                      sx={{
+                        width: 50,
+                        height: 50,
+                        backgroundColor: "#f3f4f6",
+                        color: "#9ca3af",
+                      }}
+                    >
+                      <ImageIcon size={24} />
+                    </Avatar>
                   </TableCell>
+                  <TableCell>
+                    <Typography sx={{ fontWeight: 600 }}>{item.name}</Typography>
+                  </TableCell>
+                  <TableCell>{item.category}</TableCell>
                   <TableCell>
                     <Box
                       sx={{
@@ -218,7 +294,17 @@ export default function AdminPanel({ token }) {
                     </Box>
                   </TableCell>
                   <TableCell>{item.quantity}</TableCell>
-                  <TableCell>{item.available}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={item.available}
+                      size="small"
+                      sx={{
+                        fontWeight: 600,
+                        backgroundColor: item.available > 0 ? "#d1fae5" : "#fee2e2",
+                        color: item.available > 0 ? "#065f46" : "#991b1b",
+                      }}
+                    />
+                  </TableCell>
                   <TableCell>
                     <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
                       <Edit2
@@ -239,7 +325,6 @@ export default function AdminPanel({ token }) {
                       />
                     </Box>
                   </TableCell>
-
                 </TableRow>
               ))}
             </TableBody>
@@ -252,10 +337,10 @@ export default function AdminPanel({ token }) {
         open={open}
         onClose={() => setOpen(false)}
         fullWidth
-        maxWidth="sm"
+        maxWidth="md"
         PaperProps={{
           sx: {
-            borderRadius: 2,
+            borderRadius: 3,
             p: 1,
             backgroundColor: "#fff",
           },
@@ -265,9 +350,9 @@ export default function AdminPanel({ token }) {
         <DialogTitle
           sx={{
             fontWeight: 700,
-            fontSize: "1.1rem",
+            fontSize: "1.2rem",
             color: "#000",
-            pb: 0,
+            pb: 1,
           }}
         >
           {edit ? "Edit Equipment" : "Add New Equipment"}
@@ -277,7 +362,6 @@ export default function AdminPanel({ token }) {
             color: "#6b7280",
             fontSize: "0.9rem",
             mb: 2,
-            mt: 0.5,
             ml: 3,
           }}
         >
@@ -286,134 +370,234 @@ export default function AdminPanel({ token }) {
             : "Add a new item to the inventory"}
         </Typography>
 
+        <Divider sx={{ mb: 2 }} />
+
         {/* Content */}
         <DialogContent sx={{ mt: 1 }}>
-          {/* Equipment Name */}
-          <TextField
-            fullWidth
-            label="Equipment Name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            margin="dense"
-          />
+          <Grid container spacing={3}>
+            {/* Left Column - Image Upload */}
+            <Grid item xs={12} md={4}>
+              <Box
+                sx={{
+                  border: "2px dashed #e5e7eb",
+                  borderRadius: 2,
+                  p: 2,
+                  textAlign: "center",
+                  backgroundColor: "#f9fafb",
+                  minHeight: 250,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {imagePreview ? (
+                  <Box sx={{ position: "relative", width: "100%" }}>
+                    <Box
+                      component="img"
+                      src={imagePreview}
+                      alt="Preview"
+                      sx={{
+                        width: "100%",
+                        height: 200,
+                        objectFit: "cover",
+                        borderRadius: 2,
+                        mb: 1,
+                      }}
+                      onError={() => setImagePreview(null)}
+                    />
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setForm({ ...form, image: "" });
+                      }}
+                      sx={{
+                        position: "absolute",
+                        top: 5,
+                        right: 5,
+                        backgroundColor: "rgba(0,0,0,0.6)",
+                        color: "#fff",
+                        "&:hover": { backgroundColor: "rgba(0,0,0,0.8)" },
+                      }}
+                    >
+                      <X size={16} />
+                    </IconButton>
+                  </Box>
+                ) : (
+                  <>
+                    <Upload size={40} color="#9ca3af" />
+                    <Typography
+                      sx={{ mt: 2, color: "#6b7280", fontWeight: 500 }}
+                    >
+                      Equipment Image
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: "#9ca3af" }}>
+                      Enter image URL below
+                    </Typography>
+                  </>
+                )}
+              </Box>
 
-          {/* Category */}
-          <TextField
-            fullWidth
-            label="Category"
-            placeholder="e.g., Sports, Lab Equipment, Photography"
-            value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
-            margin="dense"
-          />
-
-          {/* Description */}
-          <TextField
-            fullWidth
-            label="Description"
-            multiline
-            minRows={2}
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            margin="dense"
-          />
-
-          {/* Condition */}
-          <TextField
-            fullWidth
-            select
-            label="Condition"
-            value={form.condition}
-            onChange={(e) => setForm({ ...form, condition: e.target.value })}
-            margin="dense"
-            SelectProps={{ displayEmpty: true }}
-          >
-            <MenuItem value="Excellent">Excellent</MenuItem>
-            <MenuItem value="Good">Good</MenuItem>
-            <MenuItem value="Fair">Fair</MenuItem>
-            <MenuItem value="Poor">Poor</MenuItem>
-          </TextField>
-
-
-          {/* Conditional Fields */}
-          {edit ? (
-            <>
               <TextField
                 fullWidth
-                label="Total Quantity"
-                type="number"
-                value={form.quantity}
-                onChange={(e) =>
-                  setForm({ ...form, quantity: e.target.value })
-                }
+                label="Image URL"
+                placeholder="https://example.com/image.jpg"
+                value={form.image}
+                onChange={(e) => handleImageChange(e.target.value)}
                 margin="dense"
+                size="small"
+                sx={{ mt: 2 }}
               />
+              <Typography variant="caption" sx={{ color: "#6b7280", mt: 0.5, display: "block" }}>
+                Paste a direct image URL or leave blank for default
+              </Typography>
+            </Grid>
+
+            {/* Right Column - Form Fields */}
+            <Grid item xs={12} md={8}>
+              {errors.submit && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {errors.submit}
+                </Alert>
+              )}
+
+              {/* Equipment Name */}
               <TextField
                 fullWidth
-                label="Available"
-                type="number"
-                value={form.available}
-                onChange={(e) =>
-                  setForm({ ...form, available: e.target.value })
-                }
+                label="Equipment Name *"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                error={!!errors.name}
+                helperText={errors.name}
                 margin="dense"
               />
-            </>
-          ) : (
-            <TextField
-              fullWidth
-              label="Quantity"
-              type="number"
-              value={form.quantity}
-              onChange={(e) =>
-                setForm({ ...form, quantity: e.target.value })
-              }
-              margin="dense"
-            />
-          )}
 
-          {/* Image URL */}
-          <TextField
-            fullWidth
-            label="Image URL (Optional)"
-            placeholder="https://..."
-            value={form.image}
-            onChange={(e) => setForm({ ...form, image: e.target.value })}
-            margin="dense"
-          />
+              {/* Category */}
+              <TextField
+                fullWidth
+                label="Category *"
+                placeholder="e.g., Sports, Lab Equipment, Photography"
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                error={!!errors.category}
+                helperText={errors.category}
+                margin="dense"
+              />
+
+              {/* Description */}
+              <TextField
+                fullWidth
+                label="Description"
+                multiline
+                minRows={2}
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                margin="dense"
+                placeholder="Provide details about the equipment..."
+              />
+
+              {/* Condition */}
+              <TextField
+                fullWidth
+                select
+                label="Condition *"
+                value={form.condition}
+                onChange={(e) => setForm({ ...form, condition: e.target.value })}
+                error={!!errors.condition}
+                helperText={errors.condition}
+                margin="dense"
+              >
+                <MenuItem value="Excellent">Excellent</MenuItem>
+                <MenuItem value="Good">Good</MenuItem>
+                <MenuItem value="Fair">Fair</MenuItem>
+                <MenuItem value="Poor">Poor</MenuItem>
+              </TextField>
+
+              {/* Conditional Fields */}
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                {edit ? (
+                  <>
+                    <Grid item xs={6}>
+                      <TextField
+                        fullWidth
+                        label="Total Quantity *"
+                        type="number"
+                        value={form.quantity}
+                        onChange={(e) =>
+                          setForm({ ...form, quantity: Number(e.target.value) })
+                        }
+                        error={!!errors.quantity}
+                        helperText={errors.quantity}
+                        inputProps={{ min: 1 }}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        fullWidth
+                        label="Available"
+                        type="number"
+                        value={form.available}
+                        onChange={(e) =>
+                          setForm({ ...form, available: Number(e.target.value) })
+                        }
+                        inputProps={{ min: 0 }}
+                      />
+                    </Grid>
+                  </>
+                ) : (
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Quantity *"
+                      type="number"
+                      value={form.quantity}
+                      onChange={(e) =>
+                        setForm({ ...form, quantity: Number(e.target.value) })
+                      }
+                      error={!!errors.quantity}
+                      helperText={errors.quantity}
+                      inputProps={{ min: 1 }}
+                    />
+                  </Grid>
+                )}
+              </Grid>
+            </Grid>
+          </Grid>
         </DialogContent>
 
         {/* Buttons */}
-        <DialogActions sx={{ p: 2, pt: 1 }}>
-          <Button
-            onClick={save}
-            variant="contained"
-            sx={{
-              flexGrow: 1,
-              backgroundColor: "#000",
-              color: "#fff",
-              textTransform: "none",
-              fontWeight: 600,
-              borderRadius: 1,
-              "&:hover": { backgroundColor: "#111" },
-            }}
-          >
-            {edit ? "Save Changes" : "Add Equipment"}
-          </Button>
+        <DialogActions sx={{ p: 3, pt: 2 }}>
           <Button
             onClick={() => setOpen(false)}
             sx={{
               textTransform: "none",
               fontWeight: 600,
-              color: "#000",
-              borderRadius: 1,
+              color: "#6b7280",
+              borderRadius: 2,
+              px: 3,
+              "&:hover": { backgroundColor: "#f3f4f6" },
             }}
           >
             Cancel
+          </Button>
+          <Button
+            onClick={save}
+            variant="contained"
+            sx={{
+              backgroundColor: "#000",
+              color: "#fff",
+              textTransform: "none",
+              fontWeight: 600,
+              borderRadius: 2,
+              px: 3,
+              "&:hover": { backgroundColor: "#111" },
+            }}
+          >
+            {edit ? "Save Changes" : "Add Equipment"}
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
 }
-

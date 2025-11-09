@@ -22,8 +22,23 @@ import {
   Tabs,
   Tab,
   Paper,
+  Menu,
+  MenuItem as MenuItemOption,
+  Divider,
 } from "@mui/material";
-import { Check, X, RotateCcw, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import {
+  Check,
+  X,
+  RotateCcw,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Download,
+  FileText,
+  Printer,
+  MoreVertical,
+} from "lucide-react";
 import { apiGet, apiPut } from "../api";
 import { motion } from "framer-motion";
 
@@ -32,6 +47,7 @@ export default function RequestsPanel({ token, user }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [activeTab, setActiveTab] = useState(0);
+  const [anchorEl, setAnchorEl] = useState(null);
 
   const isAdminOrStaff = user.role === "admin" || user.role === "staff";
 
@@ -67,6 +83,205 @@ export default function RequestsPanel({ token, user }) {
     const res = await apiPut(`/requests/${id}/return`, {}, token);
     if (res.ok) load();
   }
+
+  // Export to CSV
+  const exportToCSV = () => {
+    const headers = isAdminOrStaff
+      ? ["ID", "User", "Equipment", "Quantity", "Start Date", "End Date", "Status", "Notes"]
+      : ["ID", "Equipment", "Quantity", "Start Date", "End Date", "Status", "Notes"];
+
+    const rows = tabFilteredItems.map(item =>
+      isAdminOrStaff
+        ? [
+          item.id,
+          item.user_name || item.username,
+          item.equipment_name,
+          item.quantity,
+          item.borrow_from,
+          item.borrow_to,
+          item.status,
+          item.notes || ""
+        ]
+        : [
+          item.id,
+          item.equipment_name,
+          item.quantity,
+          item.borrow_from,
+          item.borrow_to,
+          item.status,
+          item.notes || ""
+        ]
+    );
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `requests_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Export to Excel-like format (HTML table for Excel)
+  const exportToExcel = () => {
+    const headers = isAdminOrStaff
+      ? ["ID", "User", "Equipment", "Quantity", "Start Date", "End Date", "Status", "Notes"]
+      : ["ID", "Equipment", "Quantity", "Start Date", "End Date", "Status", "Notes"];
+
+    const rows = tabFilteredItems.map(item =>
+      isAdminOrStaff
+        ? [
+          item.id,
+          item.user_name || item.username,
+          item.equipment_name,
+          item.quantity,
+          item.borrow_from,
+          item.borrow_to,
+          item.status,
+          item.notes || ""
+        ]
+        : [
+          item.id,
+          item.equipment_name,
+          item.quantity,
+          item.borrow_from,
+          item.borrow_to,
+          item.status,
+          item.notes || ""
+        ]
+    );
+
+    const htmlContent = `
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <h2>Equipment Requests Report</h2>
+          <p>Generated: ${new Date().toLocaleString()}</p>
+          <table>
+            <thead>
+              <tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>
+            </thead>
+            <tbody>
+              ${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`).join("")}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([htmlContent], { type: "application/vnd.ms-excel" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `requests_${new Date().toISOString().split('T')[0]}.xls`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Print functionality
+  const handlePrint = () => {
+    const headers = isAdminOrStaff
+      ? ["ID", "User", "Equipment", "Quantity", "Start Date", "End Date", "Status"]
+      : ["ID", "Equipment", "Quantity", "Start Date", "End Date", "Status"];
+
+    const rows = tabFilteredItems.map(item =>
+      isAdminOrStaff
+        ? [
+          item.id,
+          item.user_name || item.username,
+          item.equipment_name,
+          item.quantity,
+          item.borrow_from,
+          item.borrow_to,
+          item.status
+        ]
+        : [
+          item.id,
+          item.equipment_name,
+          item.quantity,
+          item.borrow_from,
+          item.borrow_to,
+          item.status
+        ]
+    );
+
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Equipment Requests Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #333; }
+            .meta { color: #666; margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+            th { background-color: #f8f9fa; font-weight: bold; }
+            tr:nth-child(even) { background-color: #f9f9f9; }
+            .status { 
+              display: inline-block;
+              padding: 4px 8px;
+              border-radius: 4px;
+              font-weight: bold;
+              font-size: 12px;
+            }
+            .status-pending { background-color: #fef3c7; color: #f59e0b; }
+            .status-approved { background-color: #d1fae5; color: #10b981; }
+            .status-returned { background-color: #e0e7ff; color: #6366f1; }
+            .status-rejected { background-color: #fee2e2; color: #ef4444; }
+            @media print {
+              body { padding: 0; }
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Equipment Requests Report</h1>
+          <div class="meta">
+            <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+            <p><strong>Total Requests:</strong> ${tabFilteredItems.length}</p>
+          </div>
+          <table>
+            <thead>
+              <tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>
+            </thead>
+            <tbody>
+              ${rows.map(row => {
+      const statusClass = `status-${row[row.length - 1]}`;
+      return `<tr>${row.map((cell, idx) =>
+        idx === row.length - 1
+          ? `<td><span class="status ${statusClass}">${cell}</span></td>`
+          : `<td>${cell}</td>`
+      ).join("")}</tr>`;
+    }).join("")}
+            </tbody>
+          </table>
+          <script>
+            window.onload = function() {
+              window.print();
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
   if (items === null)
     return (
@@ -123,17 +338,67 @@ export default function RequestsPanel({ token, user }) {
   return (
     <Box sx={{ p: 3, mt: 2 }}>
       {/* Header */}
-      <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", mb: 1 }}>
-        {isAdminOrStaff ? "Requests Management" : "My Requests"}
-      </Typography>
-      <Typography sx={{ color: "#475569", mb: 3 }}>
-        {isAdminOrStaff
-          ? "Approve, track, and manage borrowing requests"
-          : "Track your equipment borrowing requests"}
-      </Typography>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a" }}>
+            {isAdminOrStaff ? "Requests Management" : "My Requests"}
+          </Typography>
+          <Typography sx={{ color: "#475569" }}>
+            {isAdminOrStaff
+              ? "Approve, track, and manage borrowing requests"
+              : "Track your equipment borrowing requests"}
+          </Typography>
+        </Box>
+
+        {/* Export Menu - Only for Admin/Staff */}
+        {isAdminOrStaff && tabFilteredItems.length > 0 && (
+          <Box>
+            <Button
+              variant="outlined"
+              startIcon={<Download size={18} />}
+              onClick={(e) => setAnchorEl(e.currentTarget)}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                borderRadius: "8px",
+                borderColor: "#e2e8f0",
+                color: "#475569",
+                "&:hover": {
+                  borderColor: "#cbd5e1",
+                  backgroundColor: "#f8fafc",
+                },
+              }}
+            >
+              Export Report
+            </Button>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={() => setAnchorEl(null)}
+              PaperProps={{
+                sx: { borderRadius: 2, minWidth: 180 }
+              }}
+            >
+              <MenuItemOption onClick={() => { exportToCSV(); setAnchorEl(null); }}>
+                <FileText size={16} style={{ marginRight: 8 }} />
+                Export as CSV
+              </MenuItemOption>
+              <MenuItemOption onClick={() => { exportToExcel(); setAnchorEl(null); }}>
+                <FileText size={16} style={{ marginRight: 8 }} />
+                Export as Excel
+              </MenuItemOption>
+              <Divider />
+              <MenuItemOption onClick={() => { handlePrint(); setAnchorEl(null); }}>
+                <Printer size={16} style={{ marginRight: 8 }} />
+                Print Report
+              </MenuItemOption>
+            </Menu>
+          </Box>
+        )}
+      </Box>
 
       {/* Summary Cards */}
-      <Grid container spacing={2} sx={{ mb: 4 }}>
+      <Grid container spacing={2} sx={{ mb: 4, mt: 2 }}>
         {isAdminOrStaff ? (
           <>
             {[
