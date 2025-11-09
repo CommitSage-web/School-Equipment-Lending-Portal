@@ -173,6 +173,29 @@ app.put('/api/contributors', auth(['admin','staff']), async (req, res) => {
   res.json(updated);
 });
 
+/* 2️⃣ REQUEST HISTORY + ANALYTICS ENDPOINTS */
+app.get('/api/analytics/overview', auth(['admin','staff']), async (req, res) => {
+  try {
+    const stats = await db.getAnalyticsOverview();
+    if (!stats) return res.status(404).json({ error: 'No analytics found' });
+    res.json(stats);
+  } catch (err) {
+    console.error('GET /api/analytics/overview failed:', err);
+    res.status(500).json({ error: 'Failed to fetch analytics' });
+  }
+});
+
+app.get("/api/users", auth(["admin", "staff"]), async (req, res) => {
+  try {
+    const users = await db.getAllUsers();
+    res.json(users);
+  } catch (err) {
+    console.error("GET /api/users failed:", err);
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+});
+
+
 // Optionally serve frontend build (if you place build output into frontend/build)
 app.use(express.static(path.join(__dirname, '..', 'frontend', 'build')));
 

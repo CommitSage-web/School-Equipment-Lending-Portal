@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Card,
@@ -14,49 +14,83 @@ import {
   Paper,
   TextField,
   Chip,
+  CircularProgress,
 } from "@mui/material";
 import { Users } from "lucide-react";
+import { apiGet } from "../api";
 
-const UsersPanel = () => {
-  const stats = [
-    { label: "Total Users", value: 3 },
-    { label: "Students", value: 1 },
-    { label: "Staff", value: 1 },
-    { label: "Admins", value: 1 },
-  ];
-
-  const users = [
-    {
-      name: "Admin User",
-      email: "admin@school.edu",
-      role: "admin",
-      totalRequests: 0,
-      activeLoans: "-",
-      pending: "-",
-    },
-    {
-      name: "John Smith",
-      email: "john@school.edu",
-      role: "student",
-      totalRequests: 2,
-      activeLoans: "-",
-      pending: 1,
-    },
-    {
-      name: "Dr. Jane Davis",
-      email: "jane@school.edu",
-      role: "staff",
-      totalRequests: 1,
-      activeLoans: 1,
-      pending: "-",
-    },
-  ];
+export default function UsersPanel({ token, user }) {
+  const [users, setUsers] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
 
   const roleColors = {
     admin: { bg: "#000", color: "#fff" },
     student: { bg: "#f4f4f5", color: "#000" },
     staff: { bg: "#f4f4f5", color: "#000" },
   };
+
+  // Load from backend
+  const load = async () => {
+    try {
+      const res = await apiGet("/users", token);
+      const data = await res.json();
+      setUsers(data);
+      setFiltered(data);
+    } catch (err) {
+      console.error("Error loading users:", err);
+      setUsers([]);
+      setFiltered([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  // Filter users by search query
+  useEffect(() => {
+    if (!query.trim()) {
+      setFiltered(users);
+    } else {
+      setFiltered(
+        users.filter(
+          (u) =>
+            u.name?.toLowerCase().includes(query.toLowerCase()) ||
+            u.username?.toLowerCase().includes(query.toLowerCase()) ||
+            u.role?.toLowerCase().includes(query.toLowerCase())
+        )
+      );
+    }
+  }, [query, users]);
+
+  // Compute stats
+  const stats = [
+    { label: "Total Users", value: users.length },
+    {
+      label: "Students",
+      value: users.filter((u) => u.role === "student").length,
+    },
+    { label: "Staff", value: users.filter((u) => u.role === "staff").length },
+    { label: "Admins", value: users.filter((u) => u.role === "admin").length },
+  ];
+
+  if (loading)
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "40vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
 
   return (
     <Box sx={{ p: 3, mt: 2 }}>
@@ -113,11 +147,7 @@ const UsersPanel = () => {
           <Typography fontWeight={600} sx={{ mb: 0.5 }}>
             All Users
           </Typography>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mb: 2 }}
-          >
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             View and manage system users
           </Typography>
 
@@ -126,6 +156,8 @@ const UsersPanel = () => {
             fullWidth
             placeholder="Search users..."
             size="small"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             sx={{
               mb: 2,
               "& .MuiOutlinedInput-root": {
@@ -143,7 +175,7 @@ const UsersPanel = () => {
             <Table>
               <TableHead sx={{ backgroundColor: "#f9fafb" }}>
                 <TableRow>
-                  {["Name", "Email", "Role", "Total Requests", "Active Loans", "Pending"].map(
+                  {["Name", "Username", "Role", "Roll No"].map(
                     (header, index) => (
                       <TableCell key={index} sx={{ fontWeight: 700 }}>
                         {header}
@@ -153,58 +185,34 @@ const UsersPanel = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {users.map((item, i) => (
-                  <TableRow key={i}>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell>{item.email}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={item.role}
-                        size="small"
-                        sx={{
-                          fontWeight: 600,
-                          textTransform: "lowercase",
-                          backgroundColor: roleColors[item.role]?.bg,
-                          color: roleColors[item.role]?.color,
-                          fontSize: "0.7rem",
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>{item.totalRequests}</TableCell>
-                    <TableCell>
-                      {item.activeLoans !== "-" ? (
-                        <Chip
-                          label={item.activeLoans}
-                          size="small"
-                          sx={{
-                            fontWeight: 700,
-                            color: "#fff",
-                            backgroundColor: "#000",
-                            fontSize: "0.7rem",
-                          }}
-                        />
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {item.pending !== "-" ? (
-                        <Chip
-                          label={item.pending}
-                          size="small"
-                          sx={{
-                            fontWeight: 700,
-                            color: "#111827",
-                            backgroundColor: "#f3f4f6",
-                            fontSize: "0.7rem",
-                          }}
-                        />
-                      ) : (
-                        "-"
-                      )}
+                {filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center">
+                      No users found
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filtered.map((item, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>{item.username}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={item.role}
+                          size="small"
+                          sx={{
+                            fontWeight: 600,
+                            textTransform: "lowercase",
+                            backgroundColor: roleColors[item.role]?.bg,
+                            color: roleColors[item.role]?.color,
+                            fontSize: "0.7rem",
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>{item.roll_no || "-"}</TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </TableContainer>
@@ -212,6 +220,4 @@ const UsersPanel = () => {
       </Card>
     </Box>
   );
-};
-
-export default UsersPanel;
+}

@@ -63,7 +63,11 @@ module.exports = {
         return await get('SELECT * FROM equipment WHERE id = ?', [id]);
     },
     deleteEquipment: async (id) => run('DELETE FROM equipment WHERE id = ?', [id]),
-
+    getAllUsers: async () => {
+        return await all(
+          "SELECT id, name, username, role, roll_no FROM users ORDER BY role"
+        );
+    },
     // requests
     createRequest: async (r) => {
         const res = await run('INSERT INTO requests (user_id, equipment_id, quantity, borrow_from, borrow_to, notes, status, created_at) VALUES (?, ?, ?, ?, ?, ?, "pending", datetime("now"))',
@@ -91,5 +95,37 @@ module.exports = {
             await run('INSERT INTO contributors (name, roll, contribution) VALUES (?, ?, ?)', [c.name, c.roll, c.contribution]);
         }
         return await all('SELECT * FROM contributors');
-    }
+    },
+
+    // 🔹 Mark Overdue Requests
+    markOverdueRequests: async () => {
+        const now = new Date().toISOString();
+        const rows = await all(
+          'SELECT * FROM requests WHERE status="approved" AND borrow_to < ?',
+          [now]
+        );
+        for (const r of rows) {
+            await run('UPDATE requests SET status="overdue" WHERE id=?', [r.id]);
+        }
+        return rows;
+    },
+
+    // 🔹 Analytics Overview
+    getAnalyticsOverview: async () => {
+        try {
+            const total = await get('SELECT COUNT(*) AS total FROM requests');
+            const approved = await get('SELECT COUNT(*) AS count FROM requests WHERE status="approved"');
+            const rejected = await get('SELECT COUNT(*) AS count FROM requests WHERE status="rejected"');
+            const overdue = await get('SELECT COUNT(*) AS count FROM requests WHERE status="overdue"');
+            return {
+                total: total?.total || 0,
+                approved: approved?.count || 0,
+                rejected: rejected?.count || 0,
+                overdue: overdue?.count || 0
+            };
+        } catch (err) {
+            console.error('DB getAnalyticsOverview failed:', err);
+            return { total: 0, approved: 0, rejected: 0, overdue: 0 };
+        }
+    },
 };

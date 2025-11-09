@@ -1,26 +1,4 @@
-// // frontend/src/components/EquipmentDetail.js
-// import React from 'react';
-// import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
-// import BorrowRequest from './BorrowRequest';
-
-// export default function EquipmentDetail({ item, onClose, token, user }){
-//     if(!item) return null;
-//     return (
-//         <Dialog open={true} onClose={onClose} fullWidth>
-//             <DialogTitle>{item.name}</DialogTitle>
-//             <DialogContent>
-//                 <Typography>Category: {item.category}</Typography>
-//                 <Typography>Condition: {item.condition}</Typography>
-//                 <Typography>Available: {item.available} / {item.quantity}</Typography>
-//                 <Typography sx={{ mt:2 }}>{item.description}</Typography>
-//                 {user.role === 'student' && <BorrowRequest equipment={item} token={token} user={user} onDone={onClose} />}
-//             </DialogContent>
-//             <DialogActions>
-//                 <Button onClick={onClose}>Close</Button>
-//             </DialogActions>
-//         </Dialog>
-//     );
-// }
+// frontend/src/components/EquipmentDetail.js
 import React from "react";
 import {
   Dialog,
@@ -28,26 +6,67 @@ import {
   DialogContent,
   Typography,
   Box,
-  IconButton,
   Paper,
   Button,
   TextField,
 } from "@mui/material";
 import { motion } from "framer-motion";
-import { X } from "lucide-react";
 
 export default function EquipmentDetail({ item, onClose, token, user }) {
   const [quantity, setQuantity] = React.useState(1);
   const [start, setStart] = React.useState("");
   const [end, setEnd] = React.useState("");
   const [notes, setNotes] = React.useState("");
+  const [submitting, setSubmitting] = React.useState(false);
 
   if (!item) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Request submitted successfully!");
-    onClose();
+
+    // basic validation
+    if (!start || !end) {
+      alert("Please provide both start and end dates.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const res = await fetch("/api/requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({
+          equipment_id: item.id,
+          quantity: Number(quantity),
+          borrow_from: start,
+          borrow_to: end,
+          notes,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to submit request");
+      }
+
+      const data = await res.json();
+      alert("Request submitted successfully! Request ID: " + data.id);
+
+      // reset and close
+      setQuantity(1);
+      setStart("");
+      setEnd("");
+      setNotes("");
+      onClose();
+    } catch (err) {
+      console.error("Request submission failed:", err);
+      alert("Error submitting request: " + err.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -155,24 +174,24 @@ export default function EquipmentDetail({ item, onClose, token, user }) {
           <Box sx={{ display: "flex", gap: 2 }}>
             <TextField
               label="Start Date"
-              type="text"
-              placeholder="dd-mm-yyyy"
+              type="date"
               fullWidth
               margin="dense"
               value={start}
               onChange={(e) => setStart(e.target.value)}
+              InputLabelProps={{ shrink: true }}
               InputProps={{
                 sx: { borderRadius: "8px", backgroundColor: "#f8fafc" },
               }}
             />
             <TextField
               label="End Date"
-              type="text"
-              placeholder="dd-mm-yyyy"
+              type="date"
               fullWidth
               margin="dense"
               value={end}
               onChange={(e) => setEnd(e.target.value)}
+              InputLabelProps={{ shrink: true }}
               InputProps={{
                 sx: { borderRadius: "8px", backgroundColor: "#f8fafc" },
               }}
@@ -218,6 +237,7 @@ export default function EquipmentDetail({ item, onClose, token, user }) {
                   backgroundColor: "#f8fafc",
                 },
               }}
+              disabled={submitting}
             >
               Cancel
             </Button>
@@ -233,8 +253,9 @@ export default function EquipmentDetail({ item, onClose, token, user }) {
                 backgroundColor: "#0f172a",
                 "&:hover": { backgroundColor: "#1e293b" },
               }}
+              disabled={submitting}
             >
-              Submit Request
+              {submitting ? "Submitting..." : "Submit Request"}
             </Button>
           </Box>
         </form>
