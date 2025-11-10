@@ -1,4 +1,3 @@
-
 // frontend/src/components/Dashboard.js
 import React from "react";
 import {
@@ -6,8 +5,8 @@ import {
   Tab,
   Box,
   Typography,
-  Grid,
   useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Inventory2 as EquipmentIcon,
@@ -28,6 +27,8 @@ import AnalyticsDashboard from "./AnalyticsDashboard";
 export default function Dashboard({ user, token }) {
   const [tab, setTab] = React.useState(0);
   const isMobile = useMediaQuery("(max-width:900px)");
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
 
   React.useEffect(() => {
     if (user.role === "student") setTab(0);
@@ -41,21 +42,23 @@ export default function Dashboard({ user, token }) {
       sx={{
         display: "flex",
         minHeight: "calc(100vh - 64px)",
-        background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)",
       }}
     >
       {/* Left Panel - Navigation */}
       <Box
         sx={{
-          width: isMobile ? "90px" : "270px", // ⬅️ Increased width
-          background: "#fff",
-          borderRight: "1px solid #e5e7eb",
+          width: isMobile ? "90px" : "270px",
+          background: isDark ? "#1e293b" : "#fff",
+          borderRight: `1px solid ${isDark ? "#334155" : "#e5e7eb"}`,
           p: isMobile ? 1 : 2,
           display: "flex",
           flexDirection: "column",
           alignItems: isMobile ? "center" : "flex-start",
           pt: 4,
-          boxShadow: "2px 0 10px rgba(0,0,0,0.05)",
+          boxShadow: isDark
+            ? "2px 0 10px rgba(0,0,0,0.3)"
+            : "2px 0 10px rgba(0,0,0,0.05)",
+          transition: "all 0.3s ease",
         }}
       >
         <Typography
@@ -63,7 +66,7 @@ export default function Dashboard({ user, token }) {
           sx={{
             mb: 4,
             fontWeight: 700,
-            color: "#111827",
+            color: isDark ? "#f1f5f9" : "#111827",
             textAlign: isMobile ? "center" : "left",
             letterSpacing: 0.2,
           }}
@@ -82,23 +85,23 @@ export default function Dashboard({ user, token }) {
               justifyContent: isMobile ? "center" : "flex-start",
               alignItems: "center",
               borderRadius: "10px",
-              color: "#374151",
+              color: isDark ? "#cbd5e1" : "#374151",
               minHeight: 50,
               mb: 1,
               px: isMobile ? 0 : 2,
-              width: isMobile ? "170px" : "240px", // 🔹 widen the tab background fill area
+              width: isMobile ? "70px" : "240px",
               transition: "0.2s",
               "&:hover": {
-                backgroundColor: "#f3f4f6",
+                backgroundColor: isDark ? "#334155" : "#f3f4f6",
               },
             },
             "& .Mui-selected": {
               color: "#fff !important",
-              backgroundColor: "#000",
+              backgroundColor: isDark ? "#6366f1" : "#000",
               fontWeight: 700,
-              width: isMobile ? "75px" : "96%", // 🔹 make selected tab box slightly wider
+              width: isMobile ? "75px" : "96%",
               "&:hover": {
-                backgroundColor: "#000",
+                backgroundColor: isDark ? "#4f46e5" : "#000",
               },
             },
             "& .MuiTabs-indicator": {
@@ -162,8 +165,8 @@ export default function Dashboard({ user, token }) {
           sx={{
             fontWeight: 700,
             mb: 2,
-            color: "black",
-            ml: 2.9, // 👈 adds left margin (you can adjust value as needed)
+            color: isDark ? "#f1f5f9" : "black",
+            ml: 2.9,
           }}
         >
           Welcome, {user.name}
